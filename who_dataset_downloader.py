@@ -104,21 +104,45 @@ class WHODataDownloader:
             logger.error(f"Error downloading {url}: {e}")
             return None
     
-    def search_who_datasets(self, search_terms=None):
+    def load_links_from_file(self, links_file="who_links.txt"):
+        """Load links from a file"""
+        if not os.path.exists(links_file):
+            logger.warning(f"Links file {links_file} not found")
+            return []
+        
+        with open(links_file, 'r') as f:
+            links = [line.strip() for line in f if line.strip()]
+        
+        logger.info(f"Loaded {len(links)} links from {links_file}")
+        return links
+    
+    def search_who_datasets(self, search_terms=None, use_cached_links=False):
         """Search for datasets on WHO website"""
         logger.info("Searching WHO datasets...")
         
-        # Base WHO pages to search
-        base_pages = [
-            "https://www.who.int/data",
-            "https://www.who.int/health-topics",
-            "https://www.who.int/publications",
-            "https://www.who.int/reports"
-        ]
+        # If using cached links, load them from file
+        if use_cached_links:
+            links = self.load_links_from_file()
+            if not links:
+                # Fallback to default pages if no cached links
+                links = [
+                    "https://www.who.int/data",
+                    "https://www.who.int/health-topics",
+                    "https://www.who.int/publications",
+                    "https://www.who.int/reports"
+                ]
+        else:
+            # Base WHO pages to search
+            links = [
+                "https://www.who.int/data",
+                "https://www.who.int/health-topics",
+                "https://www.who.int/publications",
+                "https://www.who.int/reports"
+            ]
         
         all_links = []
         
-        for page in base_pages:
+        for page in links:
             logger.info(f"Scanning: {page}")
             
             # Get PDF links
@@ -135,12 +159,12 @@ class WHODataDownloader:
         
         return unique_links
     
-    def download_datasets(self, search_terms=None):
+    def download_datasets(self, search_terms=None, use_cached_links=False):
         """Download all found datasets"""
         logger.info("Starting dataset download process...")
         
         # Find all links
-        links = self.search_who_datasets(search_terms)
+        links = self.search_who_datasets(search_terms, use_cached_links)
         
         if not links:
             logger.warning("No datasets found to download")
@@ -172,8 +196,8 @@ def main():
     downloader = WHODataDownloader()
     
     try:
-        # Download datasets
-        downloaded_files = downloader.download_datasets()
+        # Download datasets using cached links
+        downloaded_files = downloader.download_datasets(use_cached_links=True)
         
         if downloaded_files:
             print("\nDownloaded files:")
