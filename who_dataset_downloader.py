@@ -168,7 +168,7 @@ class WHODataDownloader:
         
         if not links:
             logger.warning("No datasets found to download")
-            return
+            return []
         
         downloaded_files = []
         
@@ -197,7 +197,7 @@ def main():
     
     try:
         # Download datasets using cached links
-        downloaded_files = downloader.download_datasets(use_cached_links=True)
+        downloaded_files = downloader.download_datasets(use_cached_links=False)
         
         if downloaded_files:
             print("\nDownloaded files:")
